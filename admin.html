@@ -555,8 +555,8 @@
                     <input type="text" class="form-input" name="nfcId" required placeholder="GLAM_001">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Phone Number</label>
-                    <input type="tel" class="form-input" name="phone" placeholder="+30 123 456 7890">
+                    <label class="form-label">Phone Number *</label>
+                    <input type="tel" class="form-input" name="phone" required placeholder="+30 123 456 7890 or 6912345678">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Email (Optional)</label>
@@ -778,8 +778,18 @@
         // Load all customers
         async function loadCustomers() {
             try {
+                console.log('Fetching customers from:', SHEETS_API_URL);
                 const response = await fetch(`${SHEETS_API_URL}?action=getAllCustomers`);
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('Data received:', data);
                 
                 // Update cache
                 customersCache = data.customers;
@@ -788,13 +798,52 @@
                 updateStats(data.stats);
             } catch (error) {
                 console.error('Error loading customers:', error);
+                console.error('Error details:', error.message);
                 document.getElementById('customerTable').innerHTML = `
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 40px; color: #E85D9B;">
-                            Error loading customers. Please check your connection.
+                            <div><strong>Error loading customers</strong></div>
+                            <div style="margin-top: 10px; font-size: 12px;">
+                                ${error.message}
+                            </div>
+                            <div style="margin-top: 10px; font-size: 12px;">
+                                Check the browser console (F12) for more details
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <button class="btn btn-primary" onclick="testAPI()">Test API Connection</button>
+                            </div>
                         </td>
                     </tr>
                 `;
+            }
+        }
+        
+        // Test API function
+        async function testAPI() {
+            console.log('Testing API...');
+            console.log('API URL:', SHEETS_API_URL);
+            
+            try {
+                const testUrl = `${SHEETS_API_URL}?action=getAllCustomers`;
+                console.log('Test URL:', testUrl);
+                
+                const response = await fetch(testUrl);
+                console.log('Response received:', response);
+                
+                const text = await response.text();
+                console.log('Response text:', text);
+                
+                try {
+                    const json = JSON.parse(text);
+                    console.log('Parsed JSON:', json);
+                    alert('API is working! Check console for details.');
+                } catch (e) {
+                    console.error('Failed to parse JSON:', e);
+                    alert('API responded but with invalid JSON. Check console.');
+                }
+            } catch (error) {
+                console.error('API test failed:', error);
+                alert('API test failed: ' + error.message);
             }
         }
 
@@ -859,13 +908,23 @@
             };
 
             try {
-                await fetch(SHEETS_API_URL, {
+                const response = await fetch(SHEETS_API_URL, {
                     method: 'POST',
                     body: JSON.stringify(data)
                 });
+                const result = await response.json();
+                
+                if (result.error) {
+                    alert('Error: ' + result.error);
+                    return;
+                }
+                
                 closeModal('addCustomer');
                 loadCustomers();
                 e.target.reset();
+                
+                // Show success message with customer ID
+                alert(`✅ Customer added successfully!\n\nCustomer ID: ${result.customerId}\n\nThis ID is based on their phone number.`);
             } catch (error) {
                 alert('Error adding customer: ' + error.message);
             }
