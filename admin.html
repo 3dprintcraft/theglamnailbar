@@ -715,8 +715,11 @@
 
         // Modal Functions
         function openModal(type) {
-            document.getElementById(type + 'Modal').classList.add('active');
-            if (type === 'addPayment' || type === 'updateSessions') {
+            const modal = document.getElementById(type + 'Modal');
+            modal.classList.add('active');
+            
+            // Only load customers once when modal first opens
+            if ((type === 'addPayment' || type === 'updateSessions') && !customersCache) {
                 loadCustomerOptions();
             }
         }
@@ -726,23 +729,44 @@
         }
 
         // Load customers for dropdowns
+        let customersCache = null;
+        
         async function loadCustomerOptions() {
             try {
+                // Only load if not already loaded
+                if (customersCache) {
+                    populateCustomerDropdowns(customersCache);
+                    return;
+                }
+                
                 const response = await fetch(`${SHEETS_API_URL}?action=getAllCustomers`);
                 const data = await response.json();
                 
-                const paymentSelect = document.getElementById('paymentCustomerSelect');
-                const sessionsSelect = document.getElementById('sessionsCustomerSelect');
-                
-                const options = data.customers.map(c => 
-                    `<option value="${c.id}">${c.name} (${c.id})</option>`
-                ).join('');
-                
-                paymentSelect.innerHTML = '<option value="">Select customer...</option>' + options;
-                sessionsSelect.innerHTML = '<option value="">Select customer...</option>' + options;
+                customersCache = data.customers;
+                populateCustomerDropdowns(customersCache);
             } catch (error) {
                 console.error('Error loading customers:', error);
             }
+        }
+        
+        function populateCustomerDropdowns(customers) {
+            const paymentSelect = document.getElementById('paymentCustomerSelect');
+            const sessionsSelect = document.getElementById('sessionsCustomerSelect');
+            
+            // Save current selections
+            const paymentValue = paymentSelect.value;
+            const sessionsValue = sessionsSelect.value;
+            
+            const options = customers.map(c => 
+                `<option value="${c.id}">${c.name} (${c.id})</option>`
+            ).join('');
+            
+            paymentSelect.innerHTML = '<option value="">Select customer...</option>' + options;
+            sessionsSelect.innerHTML = '<option value="">Select customer...</option>' + options;
+            
+            // Restore selections
+            if (paymentValue) paymentSelect.value = paymentValue;
+            if (sessionsValue) sessionsSelect.value = sessionsValue;
         }
 
         // Load all customers
@@ -750,6 +774,9 @@
             try {
                 const response = await fetch(`${SHEETS_API_URL}?action=getAllCustomers`);
                 const data = await response.json();
+                
+                // Update cache
+                customersCache = data.customers;
                 
                 displayCustomers(data.customers);
                 updateStats(data.stats);
