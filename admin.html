@@ -426,6 +426,175 @@
             opacity: 0.6;
         }
 
+        /* Side Panel Styles */
+        .side-panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            transition: right 0.3s ease;
+            z-index: 999;
+            overflow-y: auto;
+        }
+
+        .side-panel.active {
+            right: 0;
+        }
+
+        .side-panel-header {
+            background: linear-gradient(135deg, var(--pink-primary) 0%, var(--pink-dark) 100%);
+            padding: 25px;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .side-panel-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .side-panel-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .side-panel-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .side-panel-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .side-panel-content {
+            padding: 25px;
+        }
+
+        .customer-info-card {
+            background: var(--grey);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .customer-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .customer-info-label {
+            font-weight: 600;
+            color: var(--black);
+            opacity: 0.7;
+        }
+
+        .customer-info-value {
+            font-weight: 500;
+            color: var(--pink-dark);
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 20px;
+            background: white;
+            border: 2px solid var(--pink-light);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .action-btn:hover {
+            background: var(--pink-light);
+            border-color: var(--pink-primary);
+            transform: translateX(5px);
+        }
+
+        .action-btn-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--grey);
+            border-radius: 10px;
+        }
+
+        .action-btn:hover .action-btn-icon {
+            background: white;
+        }
+
+        .action-btn-content {
+            flex: 1;
+            text-align: left;
+        }
+
+        .action-btn-title {
+            color: var(--black);
+            margin-bottom: 3px;
+        }
+
+        .action-btn-desc {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--black);
+            opacity: 0.6;
+        }
+
+        .selected-row {
+            background: #FFF5FA !important;
+            border-left: 4px solid var(--pink-primary);
+        }
+
+        .customer-row {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .customer-row:hover {
+            background: #FFF5FA !important;
+        }
+
+        @media (max-width: 768px) {
+            .side-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
         @media (max-width: 768px) {
             .table-container {
                 overflow-x: auto;
@@ -490,16 +659,6 @@
                 <div class="quick-action-title">Create Offer</div>
                 <div class="quick-action-desc">Add special promotion</div>
             </div>
-            <div class="quick-action-card" onclick="openModal('addPayment')">
-                <div class="quick-action-icon">💳</div>
-                <div class="quick-action-title">Record Payment</div>
-                <div class="quick-action-desc">Add payment to customer</div>
-            </div>
-            <div class="quick-action-card" onclick="openModal('updateSessions')">
-                <div class="quick-action-icon">✨</div>
-                <div class="quick-action-title">Update Sessions</div>
-                <div class="quick-action-desc">Modify session counts</div>
-            </div>
         </div>
 
         <!-- Customer Management -->
@@ -524,10 +683,10 @@
                     <tr>
                         <th>Customer Name</th>
                         <th>NFC ID</th>
+                        <th>Phone</th>
                         <th>Tags</th>
                         <th>Sessions Remaining</th>
                         <th>Total Paid</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="customerTable">
@@ -538,6 +697,81 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Side Panel -->
+    <div class="side-panel" id="sidePanel">
+        <div class="side-panel-header">
+            <button class="side-panel-close" onclick="closeSidePanel()">×</button>
+            <div class="side-panel-title" id="sidePanelCustomerName">Customer Name</div>
+            <div class="side-panel-subtitle" id="sidePanelCustomerId">ID: CUST_XXX</div>
+        </div>
+        <div class="side-panel-content">
+            <div class="customer-info-card">
+                <div class="customer-info-row">
+                    <span class="customer-info-label">NFC Keychain</span>
+                    <span class="customer-info-value" id="sidePanelNfcId">-</span>
+                </div>
+                <div class="customer-info-row">
+                    <span class="customer-info-label">Phone</span>
+                    <span class="customer-info-value" id="sidePanelPhone">-</span>
+                </div>
+                <div class="customer-info-row">
+                    <span class="customer-info-label">Email</span>
+                    <span class="customer-info-value" id="sidePanelEmail">-</span>
+                </div>
+                <div class="customer-info-row">
+                    <span class="customer-info-label">Sessions Remaining</span>
+                    <span class="customer-info-value" id="sidePanelSessions">-</span>
+                </div>
+                <div class="customer-info-row">
+                    <span class="customer-info-label">Sessions Completed</span>
+                    <span class="customer-info-value" id="sidePanelCompleted">-</span>
+                </div>
+                <div class="customer-info-row">
+                    <span class="customer-info-label">Total Paid</span>
+                    <span class="customer-info-value" id="sidePanelTotalPaid">-</span>
+                </div>
+                <div class="customer-info-row">
+                    <span class="customer-info-label">Tags</span>
+                    <span class="customer-info-value" id="sidePanelTags">-</span>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn" onclick="openPaymentForSelected()">
+                    <div class="action-btn-icon">💳</div>
+                    <div class="action-btn-content">
+                        <div class="action-btn-title">Record Payment</div>
+                        <div class="action-btn-desc">Add new payment transaction</div>
+                    </div>
+                </button>
+
+                <button class="action-btn" onclick="openSessionsForSelected()">
+                    <div class="action-btn-icon">✨</div>
+                    <div class="action-btn-content">
+                        <div class="action-btn-title">Update Sessions</div>
+                        <div class="action-btn-desc">Add or remove sessions</div>
+                    </div>
+                </button>
+
+                <button class="action-btn" onclick="viewCustomerPortal()">
+                    <div class="action-btn-icon">👁️</div>
+                    <div class="action-btn-content">
+                        <div class="action-btn-title">View Customer Portal</div>
+                        <div class="action-btn-desc">See what customer sees</div>
+                    </div>
+                </button>
+
+                <button class="action-btn" onclick="editSelectedCustomer()">
+                    <div class="action-btn-icon">✏️</div>
+                    <div class="action-btn-content">
+                        <div class="action-btn-title">Edit Customer</div>
+                        <div class="action-btn-desc">Update customer information</div>
+                    </div>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -711,7 +945,7 @@
 
     <script>
         // Configuration - Replace with your Google Sheets Web App URL
-        const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbwKeP-Fp7Ahp9bxpa6Ud8hTfogyAX8-yUtZUfVyVf6dkjA06__kGistMLtJPdB0goahVQ/exec';
+        const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbysZiMeK8OsKBMc1Mq5uYOLRyJb9CpBg8DdDnUlFXWGFOTJM-Rm2q4stjSOzYQvkHfyXw/exec';
 
         // Modal Functions
         function openModal(type) {
@@ -861,10 +1095,11 @@
                 return;
             }
 
-            tbody.innerHTML = customers.map(customer => `
-                <tr>
+            tbody.innerHTML = customers.map((customer, index) => `
+                <tr class="customer-row" onclick="selectCustomer(${index})" data-customer-index="${index}">
                     <td class="customer-name">${customer.name}</td>
                     <td>${customer.nfcId}</td>
+                    <td>${customer.phone || '-'}</td>
                     <td>
                         ${(customer.tags || []).map(tag => 
                             `<span class="tag tag-${tag.toLowerCase()}">${tag}</span>`
@@ -872,16 +1107,6 @@
                     </td>
                     <td>${customer.sessionsRemaining || 0}</td>
                     <td>€${customer.totalPaid || 0}</td>
-                    <td>
-                        <div class="actions">
-                            <button class="icon-btn" onclick="editCustomer('${customer.id}')" title="Edit">
-                                ✏️
-                            </button>
-                            <button class="icon-btn" onclick="viewCustomer('${customer.id}')" title="View">
-                                👁️
-                            </button>
-                        </div>
-                    </td>
                 </tr>
             `).join('');
         }
@@ -1031,6 +1256,113 @@
         function editCustomer(id) {
             alert('Edit functionality - integrate with Google Sheets');
         }
+
+        // Side Panel Functions
+        let selectedCustomer = null;
+
+        function selectCustomer(index) {
+            selectedCustomer = customersCache[index];
+            
+            // Remove previous selection
+            document.querySelectorAll('.customer-row').forEach(row => {
+                row.classList.remove('selected-row');
+            });
+            
+            // Highlight selected row
+            const selectedRow = document.querySelector(`[data-customer-index="${index}"]`);
+            if (selectedRow) {
+                selectedRow.classList.add('selected-row');
+            }
+            
+            // Populate side panel
+            document.getElementById('sidePanelCustomerName').textContent = selectedCustomer.name;
+            document.getElementById('sidePanelCustomerId').textContent = 'ID: ' + selectedCustomer.id;
+            document.getElementById('sidePanelNfcId').textContent = selectedCustomer.nfcId || '-';
+            document.getElementById('sidePanelPhone').textContent = selectedCustomer.phone || '-';
+            document.getElementById('sidePanelEmail').textContent = selectedCustomer.email || '-';
+            document.getElementById('sidePanelSessions').textContent = selectedCustomer.sessionsRemaining || 0;
+            document.getElementById('sidePanelCompleted').textContent = selectedCustomer.sessionsCompleted || 0;
+            document.getElementById('sidePanelTotalPaid').textContent = '€' + (selectedCustomer.totalPaid || 0);
+            document.getElementById('sidePanelTags').textContent = (selectedCustomer.tags || []).join(', ') || '-';
+            
+            // Show side panel
+            document.getElementById('sidePanel').classList.add('active');
+        }
+
+        function closeSidePanel() {
+            document.getElementById('sidePanel').classList.remove('active');
+            
+            // Remove selection highlight
+            document.querySelectorAll('.customer-row').forEach(row => {
+                row.classList.remove('selected-row');
+            });
+            
+            selectedCustomer = null;
+        }
+
+        function openPaymentForSelected() {
+            if (!selectedCustomer) return;
+            
+            // Pre-populate the customer dropdown
+            const paymentSelect = document.getElementById('paymentCustomerSelect');
+            
+            // Make sure dropdown is populated
+            if (customersCache) {
+                populateCustomerDropdowns(customersCache);
+            }
+            
+            // Set the selected customer
+            paymentSelect.value = selectedCustomer.id;
+            
+            // Open modal
+            openModal('addPayment');
+        }
+
+        function openSessionsForSelected() {
+            if (!selectedCustomer) return;
+            
+            // Pre-populate the customer dropdown
+            const sessionsSelect = document.getElementById('sessionsCustomerSelect');
+            
+            // Make sure dropdown is populated
+            if (customersCache) {
+                populateCustomerDropdowns(customersCache);
+            }
+            
+            // Set the selected customer
+            sessionsSelect.value = selectedCustomer.id;
+            
+            // Open modal
+            openModal('updateSessions');
+        }
+
+        function viewCustomerPortal() {
+            if (!selectedCustomer) return;
+            window.open(`/index.html?id=${selectedCustomer.id}`, '_blank');
+        }
+
+        function editSelectedCustomer() {
+            if (!selectedCustomer) return;
+            alert('Edit functionality - Coming soon!\n\nCustomer: ' + selectedCustomer.name);
+        }
+
+        // Close side panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidePanel = document.getElementById('sidePanel');
+            const customerRows = document.querySelectorAll('.customer-row');
+            
+            // Check if click is outside side panel and not on a customer row
+            let clickedOnRow = false;
+            customerRows.forEach(row => {
+                if (row.contains(event.target)) {
+                    clickedOnRow = true;
+                }
+            });
+            
+            if (!sidePanel.contains(event.target) && !clickedOnRow && sidePanel.classList.contains('active')) {
+                closeSidePanel();
+            }
+        });
 
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
