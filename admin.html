@@ -944,8 +944,11 @@
     </div>
 
     <script>
-        // Configuration - Replace with your Google Sheets Web App URL
+        // ==================== CONFIGURATION ====================
+        // Update these URLs with your actual deployment URLs
         const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbwKeP-Fp7Ahp9bxpa6Ud8hTfogyAX8-yUtZUfVyVf6dkjA06__kGistMLtJPdB0goahVQ/exec';
+        const CUSTOMER_PORTAL_URL = 'https://theglamnailbar.pages.dev';
+        // ======================================================
 
         // Modal Functions
         function openModal(type) {
@@ -1341,7 +1344,7 @@
 
         function viewCustomerPortal() {
             if (!selectedCustomer) return;
-            window.open(`/index.html?id=${selectedCustomer.id}`, '_blank');
+            window.open(`${CUSTOMER_PORTAL_URL}/?id=${selectedCustomer.id}`, '_blank');
         }
 
         function editSelectedCustomer() {
