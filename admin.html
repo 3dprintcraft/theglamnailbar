@@ -1073,14 +1073,58 @@
                 try {
                     const json = JSON.parse(text);
                     console.log('Parsed JSON:', json);
-                    alert('API is working! Check console for details.');
+                    alert('✅ API is working! Check console for details.');
                 } catch (e) {
                     console.error('Failed to parse JSON:', e);
-                    alert('API responded but with invalid JSON. Check console.');
+                    alert('❌ API responded but with invalid JSON. Check console.');
                 }
             } catch (error) {
                 console.error('API test failed:', error);
-                alert('API test failed: ' + error.message);
+                alert('❌ API test failed: ' + error.message);
+            }
+        }
+        
+        // Test POST request (payment simulation)
+        async function testPayment() {
+            console.log('Testing payment submission...');
+            
+            if (!customersCache || customersCache.length === 0) {
+                alert('⚠️ Please load customers first (click Refresh)');
+                return;
+            }
+            
+            const testCustomer = customersCache[0];
+            const testData = {
+                action: 'addPayment',
+                customerId: testCustomer.id,
+                service: 'TEST - Please delete',
+                amount: 1.00,
+                date: new Date().toISOString().split('T')[0],
+                notes: 'Test payment - safe to delete'
+            };
+            
+            console.log('Sending test payment:', testData);
+            
+            try {
+                const response = await fetch(SHEETS_API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(testData)
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response data:', result);
+                
+                if (result.success) {
+                    alert('✅ Payment test successful!\n\nCheck your Google Sheet - you should see a test payment.\n\nPayment ID: ' + result.paymentId);
+                } else if (result.error) {
+                    alert('❌ Payment test failed!\n\nError: ' + result.error);
+                } else {
+                    alert('⚠️ Unexpected response. Check console.');
+                }
+            } catch (error) {
+                console.error('Payment test error:', error);
+                alert('❌ Payment test failed: ' + error.message);
             }
         }
 
@@ -1170,16 +1214,38 @@
                 targetTags: Array.from(formData.getAll('targetTags'))
             };
 
+            // Validate at least one tag is selected
+            if (data.targetTags.length === 0) {
+                alert('⚠️ Please select at least one target tag');
+                return;
+            }
+
             try {
-                await fetch(SHEETS_API_URL, {
+                const response = await fetch(SHEETS_API_URL, {
                     method: 'POST',
                     body: JSON.stringify(data)
                 });
-                closeModal('addOffer');
-                loadCustomers();
-                e.target.reset();
+                
+                const result = await response.json();
+                console.log('Offer response:', result);
+                
+                if (result.error) {
+                    alert('❌ Error creating offer: ' + result.error);
+                    return;
+                }
+                
+                if (result.success) {
+                    closeModal('addOffer');
+                    loadCustomers();
+                    e.target.reset();
+                    
+                    alert(`✅ Offer created successfully!\n\nOffer ID: ${result.offerId}\nTitle: ${data.title}\nTargets: ${data.targetTags.join(', ')}`);
+                } else {
+                    alert('❌ Failed to create offer. Please try again.');
+                }
             } catch (error) {
-                alert('Error creating offer: ' + error.message);
+                console.error('Offer error:', error);
+                alert('❌ Error creating offer: ' + error.message);
             }
         });
 
@@ -1195,16 +1261,41 @@
                 notes: formData.get('notes')
             };
 
+            // Validate customer is selected
+            if (!data.customerId) {
+                alert('⚠️ Please select a customer');
+                return;
+            }
+
             try {
-                await fetch(SHEETS_API_URL, {
+                const response = await fetch(SHEETS_API_URL, {
                     method: 'POST',
                     body: JSON.stringify(data)
                 });
-                closeModal('addPayment');
-                loadCustomers();
-                e.target.reset();
+                
+                const result = await response.json();
+                console.log('Payment response:', result);
+                
+                if (result.error) {
+                    alert('❌ Error recording payment: ' + result.error);
+                    return;
+                }
+                
+                if (result.success) {
+                    closeModal('addPayment');
+                    loadCustomers();
+                    e.target.reset();
+                    
+                    // Close side panel to see updated data
+                    closeSidePanel();
+                    
+                    alert(`✅ Payment recorded successfully!\n\nPayment ID: ${result.paymentId}\nAmount: €${data.amount}`);
+                } else {
+                    alert('❌ Failed to record payment. Please try again.');
+                }
             } catch (error) {
-                alert('Error recording payment: ' + error.message);
+                console.error('Payment error:', error);
+                alert('❌ Error recording payment: ' + error.message);
             }
         });
 
@@ -1218,16 +1309,51 @@
                 reason: formData.get('reason')
             };
 
+            // Validate customer is selected
+            if (!data.customerId) {
+                alert('⚠️ Please select a customer');
+                return;
+            }
+
+            // Validate sessions change is not zero
+            if (data.sessionsChange == 0) {
+                alert('⚠️ Please enter a non-zero value');
+                return;
+            }
+
             try {
-                await fetch(SHEETS_API_URL, {
+                const response = await fetch(SHEETS_API_URL, {
                     method: 'POST',
                     body: JSON.stringify(data)
                 });
-                closeModal('updateSessions');
-                loadCustomers();
-                e.target.reset();
+                
+                const result = await response.json();
+                console.log('Sessions response:', result);
+                
+                if (result.error) {
+                    alert('❌ Error updating sessions: ' + result.error);
+                    return;
+                }
+                
+                if (result.success) {
+                    closeModal('updateSessions');
+                    loadCustomers();
+                    e.target.reset();
+                    
+                    // Close side panel to see updated data
+                    closeSidePanel();
+                    
+                    const changeText = data.sessionsChange > 0 ? 
+                        `Added ${data.sessionsChange} sessions` : 
+                        `Removed ${Math.abs(data.sessionsChange)} sessions`;
+                    
+                    alert(`✅ Sessions updated successfully!\n\n${changeText}\nReason: ${data.reason}`);
+                } else {
+                    alert('❌ Failed to update sessions. Please try again.');
+                }
             } catch (error) {
-                alert('Error updating sessions: ' + error.message);
+                console.error('Sessions error:', error);
+                alert('❌ Error updating sessions: ' + error.message);
             }
         });
 
