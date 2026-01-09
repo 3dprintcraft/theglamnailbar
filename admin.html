@@ -668,7 +668,7 @@
         </div>
 
         <div class="search-bar">
-            <input type="text" class="search-input" id="searchInput" placeholder="Search customers by name or ID...">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by name, phone, or NFC ID...">
             <select class="filter-select" id="tagFilter">
                 <option value="">All Tags</option>
                 <option value="VIP">VIP</option>
@@ -1240,9 +1240,12 @@
             rows.forEach(row => {
                 const name = row.querySelector('.customer-name')?.textContent.toLowerCase() || '';
                 const nfcId = row.cells[1]?.textContent.toLowerCase() || '';
-                const tags = row.cells[2]?.textContent || '';
+                const phone = row.cells[2]?.textContent.toLowerCase() || '';
+                const tags = row.cells[3]?.textContent || '';
 
-                const matchesSearch = name.includes(searchTerm) || nfcId.includes(searchTerm);
+                const matchesSearch = name.includes(searchTerm) || 
+                                    nfcId.includes(searchTerm) || 
+                                    phone.includes(searchTerm);
                 const matchesTag = !tagFilter || tags.includes(tagFilter);
 
                 row.style.display = matchesSearch && matchesTag ? '' : 'none';
